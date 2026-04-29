@@ -2,11 +2,17 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
-
-# Load environment variables
+# Load local .env file (works locally)
 load_dotenv()
-API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
+# Try Streamlit secrets first, then fallback to .env
+API_KEY = st.secrets.get(
+    "ELEVENLABS_API_KEY",
+    os.getenv("ELEVENLABS_API_KEY")
+)
+if not API_KEY:
+    st.error("Missing ElevenLabs API Key")
+    st.stop()
 # ==========================================
 # PAGE CONFIGURATION & STYLING
 # ==========================================
