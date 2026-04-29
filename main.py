@@ -2,28 +2,42 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
-# Load local .env file (works locally)
+
+# ==========================================
+# LOAD ENV VARIABLES
+# ==========================================
+
+# Load local .env file (for local development)
 load_dotenv()
 
-# Try Streamlit secrets first, then fallback to .env
+# Try Streamlit Secrets first (deployment)
+# Fallback to local .env
 API_KEY = st.secrets.get(
     "ELEVENLABS_API_KEY",
     os.getenv("ELEVENLABS_API_KEY")
 )
+
+# ==========================================
+# SAFETY CHECK
+# ==========================================
+
 if not API_KEY:
-    st.error("Missing ElevenLabs API Key")
+    st.error("❌ Missing ElevenLabs API Key")
+    st.info("Add ELEVENLABS_API_KEY in Streamlit Secrets or local .env file.")
     st.stop()
+
 # ==========================================
 # PAGE CONFIGURATION & STYLING
 # ==========================================
+
 st.set_page_config(
-    page_title="VoiceBooker | TTS Engine", 
-    page_icon="🎙️", 
-    layout="wide", # Changes to a wide professional dashboard layout
+    page_title="VoiceBooker | TTS Engine",
+    page_icon="🎙️",
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS to make it look premium
+# Custom CSS
 st.markdown("""
     <style>
     .stButton>button {
@@ -34,16 +48,19 @@ st.markdown("""
         height: 3rem;
         transition: all 0.3s;
     }
+
     .stButton>button:hover {
         background-color: #0052a3;
         border-color: #0052a3;
     }
+
     .main-header {
         font-size: 2.8rem;
         font-weight: 800;
         color: #1E1E1E;
         margin-bottom: -15px;
     }
+
     .sub-header {
         font-size: 1.2rem;
         color: #666;
@@ -53,29 +70,52 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# SIDEBAR: SYSTEM STATUS
+# SIDEBAR
 # ==========================================
+
 with st.sidebar:
     st.markdown("### ⚙️ System Status")
-    
-    # Visual indicator for API Key
-    if API_KEY and API_KEY != "your_elevenlabs_api_key_here":
+
+    if API_KEY:
         st.success("🟢 API Key Loaded")
     else:
         st.error("🔴 API Key Missing")
-    
+
     st.markdown("---")
+
     st.markdown("### About VoiceBooker")
-    st.write("This testing module validates the **ElevenLabs Voice Synthesis** layer before integrating into your main LangGraph & Twilio orchestration loop.")
+
+    st.write(
+        """
+        This testing module validates the 
+        **ElevenLabs Voice Synthesis** layer 
+        before integrating into the main 
+        LangGraph & Twilio orchestration loop.
+        """
+    )
+
     st.markdown("---")
+
     st.caption("Engine: `eleven_multilingual_v2`")
     st.caption("Format: `mp3_44100_128`")
 
 # ==========================================
 # MAIN INTERFACE
 # ==========================================
-st.markdown('<p class="main-header">🎙️ VoiceBooker Synthesis Engine</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Professional Text-to-Speech Generation Testing Environment</p>', unsafe_allow_html=True)
+
+st.markdown(
+    '<p class="main-header">🎙️ VoiceBooker Synthesis Engine</p>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<p class="sub-header">Professional Text-to-Speech Generation Testing Environment</p>',
+    unsafe_allow_html=True
+)
+
+# ==========================================
+# AVAILABLE VOICES
+# ==========================================
 
 AVAILABLE_VOICES = {
     "George (British, Warm, Professional)": "JBFqnCBsd6RMkjVDRZzb",
@@ -85,62 +125,81 @@ AVAILABLE_VOICES = {
     "Callum (Transatlantic, Intense, Direct)": "N2lVS1w4EtoT3dr4eOWO"
 }
 
-# Create a two-column layout
+# ==========================================
+# LAYOUT
+# ==========================================
+
 col1, col2 = st.columns([1.2, 1], gap="large")
 
+# ==========================================
+# LEFT PANEL
+# ==========================================
+
 with col1:
+
     st.markdown("### 🗣️ Voice Configuration")
-    
+
     selected_voice_name = st.selectbox(
-        "Select Agent Voice Profile", 
+        "Select Agent Voice Profile",
         list(AVAILABLE_VOICES.keys()),
-        help="Choose the voice persona that best fits your booking agent's brand."
+        help="Choose the voice persona for your AI booking agent."
     )
+
     selected_voice_id = AVAILABLE_VOICES[selected_voice_name]
 
     st.markdown("### 📝 Script")
+
     text_to_speak = st.text_area(
-        "Enter the text you want the agent to synthesize:", 
+        "Enter the text you want the agent to synthesize:",
         "Hello! Welcome to our booking system. How can I help you schedule your venue today?",
         height=180
     )
 
-    generate_btn = st.button("🚀 Generate Audio", use_container_width=True)
+    generate_btn = st.button(
+        "🚀 Generate Audio",
+        use_container_width=True
+    )
+
+# ==========================================
+# RIGHT PANEL
+# ==========================================
 
 with col2:
+
     st.markdown("### 🎧 Audio Output")
-    
-    # If the user hasn't clicked generate yet, show instructions
+
     if not generate_btn:
-        st.info("👈 Configure your voice profile and script on the left, then click **Generate Audio** to hear the result.")
-        
-    # If the user clicks generate, process everything in this right column
+        st.info(
+            "👈 Configure your voice profile and script on the left, then click Generate Audio."
+        )
+
     if generate_btn:
-        if not API_KEY or API_KEY == "your_elevenlabs_api_key_here":
-            st.error("⚠️ API Key missing! Please check your `.env` file.")
-        elif not text_to_speak.strip():
-            st.warning("⚠️ Please enter some text for the agent to say!")
+
+        if not text_to_speak.strip():
+            st.warning("⚠️ Please enter some text.")
         else:
             try:
+
                 with st.spinner("⏳ Connecting to ElevenLabs Neural Engine..."):
+
                     client = ElevenLabs(api_key=API_KEY)
-                    
+
                     audio_generator = client.text_to_speech.convert(
                         text=text_to_speak,
-                        voice_id=selected_voice_id, 
+                        voice_id=selected_voice_id,
                         model_id="eleven_multilingual_v2",
                         output_format="mp3_44100_128",
                     )
-                    
-                    # Convert to bytes
-                    audio_bytes = b"".join(list(audio_generator))
-                    
+
+                    # Convert stream generator into bytes
+                    audio_bytes = b"".join(audio_generator)
+
                 st.success("✅ Synthesis Complete!")
-                
-                # Render the audio player
+
+                # Audio player
                 st.audio(audio_bytes, format="audio/mp3")
-                
-                # Bonus: Add a download button for the generated file
+
+                # Download button
                 st.download_button(
                     label="⬇️ Download MP3",
                     data=audio_bytes,
@@ -148,7 +207,7 @@ with col2:
                     mime="audio/mp3",
                     use_container_width=True
                 )
-                    
+
             except Exception as e:
                 st.error("❌ Synthesis Failed")
-                st.error(f"Details: {e}")
+                st.error(f"Details: {str(e)}")
