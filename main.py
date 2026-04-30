@@ -12,10 +12,8 @@ load_dotenv()
 
 # Try Streamlit Secrets first (deployment)
 # Fallback to local .env
-API_KEY = st.secrets.get(
-    "ELEVENLABS_API_KEY",
-    os.getenv("ELEVENLABS_API_KEY")
-)
+API_KEY = os.getenv("ELEVENLABS_API_KEY")
+
 
 # ==========================================
 # SAFETY CHECK
