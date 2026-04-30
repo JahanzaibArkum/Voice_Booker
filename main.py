@@ -4,15 +4,10 @@ from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
 
 # ==========================================
-# LOAD ENV VARIABLES
-# ==========================================
-
 API_KEY = st.secrets.get(
-    "ELEVENLABS_API_KEY"
+    "ELEVENLABS_API_KEY",
+    os.getenv("ELEVENLABS_API_KEY")
 )
-
-
-
 # ==========================================
 # SAFETY CHECK
 # ==========================================
