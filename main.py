@@ -7,12 +7,10 @@ from elevenlabs.client import ElevenLabs
 # LOAD ENV VARIABLES
 # ==========================================
 
-# Load local .env file (for local development)
-load_dotenv()
+API_KEY = st.secrets.get(
+    "ELEVENLABS_API_KEY"
+)
 
-# Try Streamlit Secrets first (deployment)
-# Fallback to local .env
-API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
 
 # ==========================================
